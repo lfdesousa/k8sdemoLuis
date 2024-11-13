@@ -1,0 +1,23 @@
+# kubernetes/frontend-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jom-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: jom-frontend
+  template:
+    metadata:
+      labels:
+        app: jom-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: lfds/jomfrontend:v7
+        ports:
+        - containerPort: 80
+        env:               # Added environment variables
+        - name: REACT_APP_API_URL
+          value: "/api"    # This assumes your ingress is set up to route /api to backend

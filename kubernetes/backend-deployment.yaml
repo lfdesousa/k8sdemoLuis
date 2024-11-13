@@ -1,0 +1,49 @@
+# backend-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: jom-backend
+spec:
+ replicas: 2
+ selector:
+   matchLabels:
+     app: jom-backend
+ template:
+   metadata:
+     labels:
+       app: jom-backend
+   spec:
+     containers:
+     - name: backend
+       image: lfds/jombackend:v9
+       ports:
+       - containerPort: 3000
+       env:
+       - name: REDIS_HOST
+         value: "redis"  # Service name from Helm deployment
+       - name: REDIS_PORT
+         value: "26379"  # Sentinel port
+       - name: REDIS_MODE
+         value: "sentinel"
+       - name: REDIS_SENTINEL_NAME
+         value: "mymaster"  # Default master name in Bitnami Redis
+       - name: REDIS_MASTER_SET
+         value: "mymaster"
+       - name: REDIS_PASSWORD
+         valueFrom:
+           secretKeyRef:
+             name: jom-secrets
+             key: redis-password
+       - name: DB_HOST
+         value: "postgres-primary"
+       - name: DB_PORT
+         value: "5432"
+       - name: DB_USER
+         value: "postgres"
+       - name: DB_PASSWORD
+         valueFrom:
+           secretKeyRef:
+             name: jom-secrets
+             key: postgres-password
+       - name: DB_NAME
+         value: "jomdb"

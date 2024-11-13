@@ -1,0 +1,67 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7.0-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass YourRedisPassword
+    networks:
+      - jom-network
+
+  postgres:
+    image: postgres:16.4-alpine
+    environment:
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_DB: jomdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d
+    networks:
+      - jom-network
+
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=YourRedisPassword
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres123
+      - DB_NAME=jomdb
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - jom-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:80"
+    environment:
+      - REACT_APP_API_URL=http://localhost:3000/api
+    depends_on:
+      - backend
+    networks:
+      - jom-network
+
+networks:
+  jom-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+
